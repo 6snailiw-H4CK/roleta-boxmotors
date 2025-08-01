@@ -1,0 +1,202 @@
+<ROLETA>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Box Motors - Roleta de Prêmios</title>
+  <style>
+    body {
+      background-color: #6b6565;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #logo {
+      width: 180px;
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    input {
+      width: 220px;
+    }
+
+    button {
+      background-color: white;
+      color: black;
+      cursor: pointer;
+    }
+
+    canvas {
+      border-radius: 50%;
+      margin: 20px auto;
+    }
+
+    #spin {
+      background-color: red;
+      color: white;
+      font-weight: bold;
+      font-size: 18px;
+      margin: 20px auto;
+      display: block;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 20px;
+      color: lime;
+    }
+
+    #redirect {
+      margin-top: 30px;
+      display: block;
+      color: cyan;
+      font-weight: bold;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <!-- Formulário oculto para enviar os dados sem erro de CORS -->
+  <iframe name="form-oculto" id="form-oculto" style="display:none;"></iframe>
+
+  <img id="logo" src="logo box.png" alt="Box Motors Logo">
+
+  <div>
+    <input type="text" id="nome" placeholder="Digite seu nome">
+    <input type="text" id="whatsapp" placeholder="WhatsApp com DDD">
+    <input type="text" id="cpf" placeholder="Digite seu CPF">
+    <button onclick="validarCPF()">Validar CPF</button>
+  </div>
+
+  <canvas id="wheel" width="300" height="300"></canvas>
+
+  <button id="spin" onclick="girarRoleta()" disabled>🎁 GIRAR A ROLETA</button>
+
+  <div id="result"></div>
+
+  <a id="redirect" href="https://linktr.ee/BoxMotors" target="_blank">Clique aqui para acessar nosso link</a>
+
+  <script>
+    const premios = [
+      "R$50 de desconto",
+      "Revisão freios",
+      "Brinde surpresa",
+      "Lavagem grátis",
+      "Troca de vela",
+      "10% OFF"
+    ];
+
+    let cpfsUsados = new Set();
+    let dadosUsuarios = [];
+    let angleCurrent = 0;
+
+    function desenharRoleta() {
+      const canvas = document.getElementById("wheel");
+      const ctx = canvas.getContext("2d");
+      const total = premios.length;
+      const angle = 2 * Math.PI / total;
+      const colors = ["#ff0000", "#000000"];
+
+      for (let i = 0; i < total; i++) {
+        ctx.beginPath();
+        ctx.moveTo(150, 150);
+        ctx.arc(150, 150, 150, i * angle, (i + 1) * angle);
+        ctx.fillStyle = colors[i % 2];
+        ctx.fill();
+        ctx.save();
+        ctx.translate(150, 150);
+        ctx.rotate(i * angle + angle / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "white";
+        ctx.font = "bold 14px Arial";
+        ctx.fillText(premios[i], 140, 10);
+        ctx.restore();
+      }
+    }
+
+    desenharRoleta();
+
+    function validarCPF() {
+      const cpf = document.getElementById("cpf").value.trim();
+      const nome = document.getElementById("nome").value.trim();
+      const whatsapp = document.getElementById("whatsapp").value.trim();
+
+      if (cpf.length === 11 && nome !== "" && whatsapp !== "" && !cpfsUsados.has(cpf)) {
+        document.getElementById("spin").disabled = false;
+      } else {
+        alert("Preencha todos os dados corretamente ou CPF já utilizado.");
+      }
+    }
+
+function girarRoleta() {
+  const cpf = document.getElementById("cpf").value.trim();
+  const nome = document.getElementById("nome").value.trim();
+  const whatsapp = document.getElementById("whatsapp").value.trim();
+
+  if (cpfsUsados.has(cpf)) return;
+
+  cpfsUsados.add(cpf);
+  dadosUsuarios.push({ nome, whatsapp, cpf });
+
+  document.getElementById("spin").disabled = true;
+
+  const total = premios.length;
+  const rand = Math.floor(Math.random() * total);
+  const anglePerPrize = 360 / total;
+  const extraRotations = 5;
+  const angleTo = 360 * extraRotations + (360 - rand * anglePerPrize - anglePerPrize / 2);
+
+  const canvas = document.getElementById("wheel");
+  canvas.style.transition = "transform 4s ease-out";
+  canvas.style.transform = `rotate(${angleTo + angleCurrent}deg)`;
+  angleCurrent += angleTo;
+
+  setTimeout(() => {
+    const premio = premios[rand];
+    document.getElementById("result").innerHTML = `
+      🎉 Parabéns <strong>${nome}</strong>! Você ganhou: <strong>${premio}</strong>  
+
+      🥳 Tire um print da tela e marque <strong>@box_motors</strong> no Instagram!
+    `;
+    
+    // --- NOVA LÓGICA DE ENVIO ---
+    // 1. Crie um formulário na memória
+    const form = document.createElement('form');
+    form.method = 'GET';
+    form.action = 'https://script.google.com/macros/s/AKfycbwo9cVXq7a0pZtoBiR-I8Tn5VgbMv-aATilPKOXedXVRoxeRCFi59ObSWGPc5sHHZse/exec'; // <-- COLE SUA NOVA URL AQUI
+    form.target = 'form-oculto'; // Aponta para o iframe oculto
+
+    // 2. Crie os campos com os dados
+    const dados = { nome, whatsapp, cpf, premio };
+    for (const key in dados) {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = dados[key];
+      form.appendChild(input);
+    }
+
+    // 3. Adicione o formulário à página, envie e remova
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    
+    console.log("Dados enviados para a planilha!");
+    // Não haverá mais 'fetch' nem erro de CORS.
+
+  }, 4500);
+}
+
+  </script>
+</body>
+</html>
