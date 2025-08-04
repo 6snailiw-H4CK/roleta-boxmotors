@@ -5,7 +5,7 @@
   <title>Box Motors - Roleta de Prêmios</title>
   <style>
     body { background-color: #6b6565; color: white; font-family: Arial, sans-serif; text-align: center; padding: 20px; overflow-x: hidden; }
-    #logo { width: 380px; margin-bottom: 20px; transition: all 0.3s; }
+    #logo { width: 480px; margin-bottom: 20px; transition: all 0.3s; }
     input, button { padding: 10px; margin: 5px; border: none; border-radius: 5px; font-size: 16px; }
     input { width: 220px; }
     button { background-color: white; color: black; cursor: pointer; }
@@ -17,18 +17,36 @@
     #result { margin-top: 20px; font-size: 20px; color: lime; }
     #redirect { margin-top: 30px; display: block; color: cyan; font-weight: bold; text-decoration: underline; }
     
+    /* --- CORREÇÃO PARA TELAS PEQUENAS (CELULARES) --- */
     @media (max-width: 480px) {
-      body { padding: 10px 5px; }
-      #logo { width: 120px; margin-bottom: 10px; }
-      input { font-size: 14px; width: 80%; padding: 8px; }
+      body { padding: 15px 10px; }
+      #logo { 
+        width: 280px; /* Aumenta o tamanho da logo */
+        margin-bottom: 15px; 
+      }
+      input { 
+        font-size: 14px; 
+        width: 95%; /* Ocupa mais espaço na tela */
+        padding: 12px; /* Deixa o campo de texto mais alto */
+        box-sizing: border-box; /* Garante que o padding não aumente a largura total */
+      }
       button { font-size: 14px; }
-      #form-container { margin-bottom: 10px; }
-      #roleta-container { width: 120px; height: 120px; margin: 10px auto; }
-      #seta-indicadora { font-size: 40px; right: -25px; }
-      #spin { font-size: 16px; margin: 10px auto; padding: 10px 20px; }
-      #result { font-size: 16px; margin-top: 10px; }
-      #redirect { font-size: 14px; margin-top: 15px; }
+      #form-container { margin-bottom: 15px; }
+      
+      #roleta-container { 
+        width: 250px; /* Aumenta significativamente o tamanho da roleta */
+        height: 250px; 
+        margin: 15px auto; 
+      }
+      #seta-indicadora { 
+        font-size: 45px; /* Ajusta o tamanho da seta */
+        right: -28px; /* Ajusta a posição da seta */
+      }
+      #spin { font-size: 18px; margin: 15px auto; padding: 12px 25px; }
+      #result { font-size: 16px; margin-top: 15px; }
+      #redirect { font-size: 14px; margin-top: 20px; }
     }
+</style>
   </style>
 </head>
 <body>
@@ -44,7 +62,7 @@
 
   <div id="roleta-container">
     <div id="seta-indicadora">◀</div>
-    <canvas id="wheel" width="200" height="200"></canvas>
+    <canvas id="wheel" width="300" height="300"></canvas>
   </div>
 
   <button id="spin" onclick="girarRoleta()" disabled>🎁 GIRAR A ROLETA</button>
@@ -61,17 +79,17 @@
       const canvas = document.getElementById("wheel"), ctx = canvas.getContext("2d"), total = premios.length, angle = 2 * Math.PI / total, colors = ["#ff0000", "#000000"];
       for (let i = 0; i < total; i++) {
         ctx.beginPath();
-        ctx.moveTo(100, 100);
-        ctx.arc(100, 100, 100, i * angle, (i + 1) * angle);
+        ctx.moveTo(150, 150);
+        ctx.arc(150, 150, 150, i * angle, (i + 1) * angle);
         ctx.fillStyle = colors[i % 2];
         ctx.fill();
         ctx.save();
-        ctx.translate(100, 100);
+        ctx.translate(150, 150);
         ctx.rotate(i * angle + angle / 2);
         ctx.textAlign = "right";
         ctx.fillStyle = "white";
-        ctx.font = "bold 11px arial";
-        ctx.fillText(premios[i], 90, 8);
+        ctx.font = "bold 14px arial";
+        ctx.fillText(premios[i], 130, 8);
         ctx.restore();
       }
     }
