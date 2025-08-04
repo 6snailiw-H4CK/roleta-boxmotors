@@ -9,28 +9,21 @@
     input, button { padding: 10px; margin: 5px; border: none; border-radius: 5px; font-size: 16px; }
     input { width: 220px; }
     button { background-color: white; color: black; cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: 0.6; }
     #roleta-container { position: relative; width: 300px; height: 300px; margin: 20px auto; transition: all 0.3s; }
     #seta-indicadora { font-size: 50px; color: limegreen; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7); position: absolute; top: 50%; right: -30px; transform: translateY(-50%); z-index: 10; transition: all 0.3s; }
     canvas { border-radius: 50%; width: 100%; height: 100%; }
     #spin { background-color: red; color: white; font-weight: bold; font-size: 18px; margin: 20px auto; display: block; }
     #result { margin-top: 20px; font-size: 20px; color: lime; }
     #redirect { margin-top: 30px; display: block; color: cyan; font-weight: bold; text-decoration: underline; }
-    #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
-    #modal-content { background-color: #333; padding: 20px; border-radius: 10px; text-align: left; width: 90%; max-width: 400px; }
-    #modal-content h2 { margin-top: 0; text-align: center; font-size: 1.2em; }
-    #modal-content p { line-height: 1.5; font-size: 0.9em; }
-    #modal-content strong { color: limegreen; }
-    #modal-buttons { text-align: center; margin-top: 20px; }
-    #modal-buttons button { padding: 10px 15px; margin: 0 10px; font-size: 0.9em; }
-    #confirm-btn { background-color: #28a745; color: white; }
-    #cancel-btn { background-color: #dc3545; color: white; }
+    
     @media (max-width: 480px) {
       body { padding: 10px 5px; }
       #logo { width: 120px; margin-bottom: 10px; }
       input { font-size: 14px; width: 80%; padding: 8px; }
       button { font-size: 14px; }
       #form-container { margin-bottom: 10px; }
-      #roleta-container { width: 140px; height: 140px; margin: 10px auto; }
+      #roleta-container { width: 120px; height: 120px; margin: 10px auto; }
       #seta-indicadora { font-size: 40px; right: -25px; }
       #spin { font-size: 16px; margin: 10px auto; padding: 10px 20px; }
       #result { font-size: 16px; margin-top: 10px; }
@@ -39,19 +32,6 @@
   </style>
 </head>
 <body>
-  <div id="modal-overlay">
-    <div id="modal-content">
-      <h2>Confirme seus Dados</h2>
-      <p><strong>Nome:</strong> <span id="confirm-nome"></span></p>
-      <p><strong>WhatsApp:</strong> <span id="confirm-whatsapp"></span></p>
-      <p><strong>CPF:</strong> <span id="confirm-cpf"></span></p>
-      <div id="modal-buttons">
-        <button id="cancel-btn">Corrigir</button>
-        <button id="confirm-btn">Confirmar</button>
-      </div>
-    </div>
-  </div>
-
   <iframe name="form-oculto" id="form-oculto" style="display:none;"></iframe>
   <img id="logo" src="logo box.png" alt="Box Motors Logo">
   
@@ -59,12 +39,12 @@
     <input type="text" id="nome" placeholder="Digite seu nome">
     <input type="text" id="whatsapp" placeholder="WhatsApp com DDD">
     <input type="text" id="cpf" placeholder="Digite seu CPF">
-    <button onclick="validarCPF()">Validar CPF</button>
+    <button id="validar-btn" onclick="validarCPF()">Validar CPF</button>
   </div>
 
   <div id="roleta-container">
     <div id="seta-indicadora">◀</div>
-    <canvas id="wheel" width="280" height="280"></canvas>
+    <canvas id="wheel" width="200" height="200"></canvas>
   </div>
 
   <button id="spin" onclick="girarRoleta()" disabled>🎁 GIRAR A ROLETA</button>
@@ -75,31 +55,23 @@
     const premios = ["Troca de Oleo", "Revisão freios", "Brinde surpresa", "Lavagem grátis", "Troca de vela", "10% OFF"];
     let cpfsUsados = new Set( );
     let angleCurrent = 0;
-
-    // --- CORREÇÃO: Variáveis para guardar os dados do jogador ---
-    let jogadorNome = '';
-    let jogadorWhatsapp = '';
-    let jogadorCpf = '';
+    let jogadorNome = '', jogadorWhatsapp = '', jogadorCpf = '';
 
     function desenharRoleta() {
-      const canvas = document.getElementById("wheel");
-      const ctx = canvas.getContext("2d");
-      const total = premios.length;
-      const angle = 2 * Math.PI / total;
-      const colors = ["#ff0000", "#000000"];
+      const canvas = document.getElementById("wheel"), ctx = canvas.getContext("2d"), total = premios.length, angle = 2 * Math.PI / total, colors = ["#ff0000", "#000000"];
       for (let i = 0; i < total; i++) {
         ctx.beginPath();
-        ctx.moveTo(140, 140);
-        ctx.arc(140, 140, 140, i * angle, (i + 1) * angle);
+        ctx.moveTo(100, 100);
+        ctx.arc(100, 100, 100, i * angle, (i + 1) * angle);
         ctx.fillStyle = colors[i % 2];
         ctx.fill();
         ctx.save();
-        ctx.translate(140, 140);
+        ctx.translate(100, 100);
         ctx.rotate(i * angle + angle / 2);
         ctx.textAlign = "right";
         ctx.fillStyle = "white";
-        ctx.font = "bold 15px arial";
-        ctx.fillText(premios[i], 127, 10);
+        ctx.font = "bold 11px arial";
+        ctx.fillText(premios[i], 90, 8);
         ctx.restore();
       }
     }
@@ -119,36 +91,30 @@
         return;
       }
 
-      document.getElementById("confirm-nome").textContent = nome;
-      document.getElementById("confirm-whatsapp").textContent = whatsapp;
-      document.getElementById("confirm-cpf").textContent = cpf;
-      document.getElementById("modal-overlay").style.display = "flex";
+      // Libera o botão de girar e desabilita o botão de validar
+      document.getElementById("spin").disabled = false;
+      document.getElementById("validar-btn").disabled = true;
+      alert("CPF validado! Você já pode girar a roleta.");
     }
 
-    document.getElementById("cancel-btn").onclick = function() {
-      document.getElementById("modal-overlay").style.display = "none";
-    };
-
-    document.getElementById("confirm-btn").onclick = function() {
-      // --- CORREÇÃO: Captura os dados ANTES de esconder o formulário ---
+    function girarRoleta() {
+      // Captura os dados antes de esconder o formulário
       jogadorNome = document.getElementById("nome").value.trim();
       jogadorWhatsapp = document.getElementById("whatsapp").value.trim();
       jogadorCpf = document.getElementById("cpf").value.trim();
-      
-      cpfsUsados.add(jogadorCpf);
-      
-      document.getElementById('form-container').style.display = 'none';
-      document.getElementById("spin").disabled = false;
-      document.getElementById("modal-overlay").style.display = "none";
-    };
 
-    function girarRoleta() {
+      // Verifica se o CPF já foi usado nesta sessão
+      if (cpfsUsados.has(jogadorCpf)) {
+        alert("Este CPF já girou a roleta nesta sessão.");
+        return;
+      }
+      cpfsUsados.add(jogadorCpf); // Adiciona o CPF à lista de usados
+
+      // Esconde o formulário e desabilita os botões
+      document.getElementById('form-container').style.display = 'none';
       document.getElementById("spin").disabled = true;
       
-      const total = premios.length;
-      const rand = Math.floor(Math.random() * total);
-      const anglePerPrize = 360 / total;
-      const extraRotations = 6;
+      const total = premios.length, rand = Math.floor(Math.random() * total), anglePerPrize = 360 / total, extraRotations = 6;
       const prizeMiddleAngle = (rand * anglePerPrize) + (anglePerPrize / 2);
       const angleTo = (360 * extraRotations) - prizeMiddleAngle;
 
@@ -159,16 +125,15 @@
 
       setTimeout(() => {
         const premio = premios[rand];
-        // --- CORREÇÃO: Usa os dados guardados nas variáveis globais ---
         document.getElementById("result").innerHTML = `🎉 Parabéns <strong>${jogadorNome}</strong>! Você ganhou: <strong>${premio}</strong>  
 🥳 Para Receber Seu Premio Tire um print da tela e marque <strong>@box_motors</strong> no Instagram!`;
         
         const form = document.createElement('form');
         form.method = 'GET';
+        // Use a URL do seu script que já estava funcionando para salvar os dados
         form.action = 'https://script.google.com/macros/s/AKfycbwo9cVXq7a0pZtoBiR-I8Tn5VgbMv-aATilPKOXedXVRoxeRCFi59ObSWGPc5sHHZse/exec';
         form.target = 'form-oculto';
         
-        // --- CORREÇÃO: Usa os dados guardados nas variáveis globais ---
         const dados = { nome: jogadorNome, whatsapp: jogadorWhatsapp, cpf: jogadorCpf, premio: premio };
         for (const key in dados ) {
           const input = document.createElement('input');
@@ -182,4 +147,4 @@
     }
   </script>
 </body>
-</html>```
+</html>
