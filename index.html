@@ -4,47 +4,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Box Motors - Roleta de Prêmios</title>
   <style>
-    body {
-      background-color: #6b6565;
-      color: white;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-      overflow-x: hidden;
-    }
-    #logo-area {
-      position: relative;
-      display: inline-block;
-      margin-bottom: 20px;
-    }
-    #logo { width: 280px; transition: all 0.3s; position: relative; z-index: 1; }
-    .fumaca {
-      position: absolute;
-      top: 10px;
-      width: 70px;
-      opacity: 0.7;
-      pointer-events: none;
-      z-index: 2;
-      animation: fumaça-move 2.5s infinite alternate ease-in-out;
-    }
-    .fumaca.esquerda { left: -75px; transform: scaleX(-1) rotate(-10deg);}
-    .fumaca.direita { right: -75px; transform: rotate(10deg);}
-    @keyframes fumaça-move {
-      0% { opacity: 0.7; top: 10px; }
-      100% { opacity: 0.3; top: 0px; }
-    }
+    body { background-color: #6b6565; color: white; font-family: Arial, sans-serif; text-align: center; padding: 20px; overflow-x: hidden; }
+    #logo { width: 280px; margin-bottom: 20px; transition: all 0.3s; }
     input, button { padding: 10px; margin: 5px; border: none; border-radius: 5px; font-size: 16px; }
     input { width: 220px; }
     button { background-color: white; color: black; cursor: pointer; }
-
     #roleta-container { position: relative; width: 300px; height: 300px; margin: 20px auto; transition: all 0.3s; }
     #seta-indicadora { font-size: 50px; color: limegreen; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7); position: absolute; top: 50%; right: -30px; transform: translateY(-50%); z-index: 10; transition: all 0.3s; }
     canvas { border-radius: 50%; width: 100%; height: 100%; }
-    
     #spin { background-color: red; color: white; font-weight: bold; font-size: 18px; margin: 20px auto; display: block; }
     #result { margin-top: 20px; font-size: 20px; color: lime; }
     #redirect { margin-top: 30px; display: block; color: cyan; font-weight: bold; text-decoration: underline; }
-
     #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
     #modal-content { background-color: #333; padding: 20px; border-radius: 10px; text-align: left; width: 90%; max-width: 400px; }
     #modal-content h2 { margin-top: 0; text-align: center; font-size: 1.2em; }
@@ -54,15 +24,9 @@
     #modal-buttons button { padding: 10px 15px; margin: 0 10px; font-size: 0.9em; }
     #confirm-btn { background-color: #28a745; color: white; }
     #cancel-btn { background-color: #dc3545; color: white; }
-
-    /* --- CSS AGRESSIVO PARA CELULAR --- */
     @media (max-width: 480px) {
       body { padding: 10px 5px; }
-      #logo-area { margin-bottom: 10px; }
-      #logo { width: 120px; }
-      .fumaca { width: 35px; top: 5px; }
-      .fumaca.esquerda { left: -40px; }
-      .fumaca.direita { right: -40px; }
+      #logo { width: 120px; margin-bottom: 10px; }
       input { font-size: 14px; width: 80%; padding: 8px; }
       button { font-size: 14px; }
       #form-container { margin-bottom: 10px; }
@@ -89,12 +53,7 @@
   </div>
 
   <iframe name="form-oculto" id="form-oculto" style="display:none;"></iframe>
-  
-  <div id="logo-area">
-    <img src="fumaca-esquerda.png" alt="Fumaça Esquerda" class="fumaca esquerda">
-    <img id="logo" src="logo box.png" alt="Box Motors Logo">
-    <img src="fumaca-direita.png" alt="Fumaça Direita" class="fumaca direita">
-  </div>
+  <img id="logo" src="logo box.png" alt="Box Motors Logo">
   
   <div id="form-container">
     <input type="text" id="nome" placeholder="Digite seu nome">
@@ -115,8 +74,12 @@
   <script>
     const premios = ["R$50 de desconto", "Revisão freios", "Brinde surpresa", "Lavagem grátis", "Troca de vela", "10% OFF"];
     let cpfsUsados = new Set( );
-    let dadosUsuarios = [];
     let angleCurrent = 0;
+
+    // --- CORREÇÃO: Variáveis para guardar os dados do jogador ---
+    let jogadorNome = '';
+    let jogadorWhatsapp = '';
+    let jogadorCpf = '';
 
     function desenharRoleta() {
       const canvas = document.getElementById("wheel");
@@ -156,7 +119,6 @@
         return;
       }
 
-      // Preenche o modal com os dados para confirmação
       document.getElementById("confirm-nome").textContent = nome;
       document.getElementById("confirm-whatsapp").textContent = whatsapp;
       document.getElementById("confirm-cpf").textContent = cpf;
@@ -168,20 +130,20 @@
     };
 
     document.getElementById("confirm-btn").onclick = function() {
-      const cpf = document.getElementById("cpf").value.trim();
-      cpfsUsados.add(cpf);
+      // --- CORREÇÃO: Captura os dados ANTES de esconder o formulário ---
+      jogadorNome = document.getElementById("nome").value.trim();
+      jogadorWhatsapp = document.getElementById("whatsapp").value.trim();
+      jogadorCpf = document.getElementById("cpf").value.trim();
       
-      // Esconde o formulário e libera o botão de girar
+      cpfsUsados.add(jogadorCpf);
+      
       document.getElementById('form-container').style.display = 'none';
       document.getElementById("spin").disabled = false;
-      
       document.getElementById("modal-overlay").style.display = "none";
     };
 
     function girarRoleta() {
       document.getElementById("spin").disabled = true;
-      const cpf = document.getElementById("cpf").value.trim(), nome = document.getElementById("nome").value.trim(), whatsapp = document.getElementById("whatsapp").value.trim();
-      dadosUsuarios.push({ nome, whatsapp, cpf });
       
       const total = premios.length;
       const rand = Math.floor(Math.random() * total);
@@ -197,14 +159,17 @@
 
       setTimeout(() => {
         const premio = premios[rand];
-        document.getElementById("result").innerHTML = `🎉 Parabéns <strong>${nome}</strong>! Você ganhou: <strong>${premio}</strong>  
+        // --- CORREÇÃO: Usa os dados guardados nas variáveis globais ---
+        document.getElementById("result").innerHTML = `🎉 Parabéns <strong>${jogadorNome}</strong>! Você ganhou: <strong>${premio}</strong>  
 🥳 Para Receber Seu Premio Tire um print da tela e marque <strong>@box_motors</strong> no Instagram!`;
         
         const form = document.createElement('form');
         form.method = 'GET';
         form.action = 'https://script.google.com/macros/s/AKfycbwo9cVXq7a0pZtoBiR-I8Tn5VgbMv-aATilPKOXedXVRoxeRCFi59ObSWGPc5sHHZse/exec';
         form.target = 'form-oculto';
-        const dados = { nome, whatsapp, cpf, premio };
+        
+        // --- CORREÇÃO: Usa os dados guardados nas variáveis globais ---
+        const dados = { nome: jogadorNome, whatsapp: jogadorWhatsapp, cpf: jogadorCpf, premio: premio };
         for (const key in dados ) {
           const input = document.createElement('input');
           input.type = 'hidden'; input.name = key; input.value = dados[key];
@@ -217,4 +182,4 @@
     }
   </script>
 </body>
-</html>
+</html>```
