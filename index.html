@@ -4,55 +4,102 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Box Motors - Roleta de Prêmios</title>
   <style>
-    body { background-color: #c4c4c477; color: white; font-family: Arial, sans-serif; text-align: center; padding: 20px; overflow-x: hidden; }
+    /* --------------------
+       ESTILOS PRINCIPAIS
+    -------------------- */
+    body {
+      background-color: #c4c4c477;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
     #logo { width: 480px; margin-bottom: 20px; transition: all 0.3s; }
-    input, button { padding: 10px; margin: 5px; border: none; border-radius: 5px; font-size: 16px; }
+    input, button {
+      padding: 10px; margin: 5px;
+      border: none; border-radius: 5px;
+      font-size: 16px;
+    }
     input { width: 220px; }
     button { background-color: white; color: black; cursor: pointer; }
     button:disabled { cursor: not-allowed; opacity: 0.6; }
     #roleta-container { position: relative; width: 300px; height: 300px; margin: 20px auto; transition: all 0.3s; }
-    #seta-indicadora { font-size: 50px; color: limegreen; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7); position: absolute; top: 50%; right: -30px; transform: translateY(-50%); z-index: 10; transition: all 0.3s; }
+    #seta-indicadora { font-size: 50px; color: limegreen; text-shadow: 1px 1px 2px rgba(0,0,0,0.7); position: absolute; top:50%; right:-30px; transform: translateY(-50%); z-index:10; transition: all 0.3s; }
     canvas { border-radius: 50%; width: 100%; height: 100%; }
     #spin { background-color: red; color: white; font-weight: bold; font-size: 18px; margin: 20px auto; display: block; }
-    #result { margin-top: 20px; font-size: 20px; color: rgb(10, 84, 0); }
-    #redirect { margin-top: 30px; display: block; color: rgb(113, 16, 106); font-weight: bold; text-decoration: underline; }
-    
-    /* --- CORREÇÃO PARA TELAS PEQUENAS (CELULARES) --- */
+    #result { margin-top: 20px; font-size: 20px; color: rgb(10,84,0); }
+    #redirect { margin-top: 30px; display: block; color: rgb(113,16,106); font-weight: bold; text-decoration: underline; }
+
+    /* --------------------
+       POPUP INICIAL
+    -------------------- */
+    #popup-video {
+      display: block; /* fica visível ao abrir página */
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.8);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    #popup-video video {
+      border-radius: 15px;
+      max-width: 90%;
+      max-height: 80%;
+    }
+    #popup-video button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      background-color: red;
+      color: white;
+      cursor: pointer;
+    }
+
+    /* --------------------
+       RESPONSIVIDADE
+    -------------------- */
     @media (max-width: 480px) {
-      body { padding: 15px 10px; }
-      #logo { 
-        width: 280px; /* Aumenta o tamanho da logo */
-        margin-bottom: 15px; 
-      }
-      input { 
-        font-size: 14px; 
-        width: 95%; /* Ocupa mais espaço na tela */
-        padding: 12px; /* Deixa o campo de texto mais alto */
-        box-sizing: border-box; /* Garante que o padding não aumente a largura total */
-      }
+      #logo { width: 280px; margin-bottom: 15px; }
+      input { font-size: 14px; width: 95%; padding: 12px; box-sizing: border-box; }
       button { font-size: 14px; }
-      #form-container { margin-bottom: 15px; }
-      
-      #roleta-container { 
-        width: 250px; /* Aumenta significativamente o tamanho da roleta */
-        height: 250px; 
-        margin: 15px auto; 
-      }
-      #seta-indicadora { 
-        font-size: 45px; /* Ajusta o tamanho da seta */
-        right: -28px; /* Ajusta a posição da seta */
-      }
+      #roleta-container { width: 250px; height: 250px; margin: 15px auto; }
+      #seta-indicadora { font-size: 45px; right: -28px; }
       #spin { font-size: 18px; margin: 15px auto; padding: 12px 25px; }
       #result { font-size: 16px; margin-top: 15px; }
       #redirect { font-size: 14px; margin-top: 20px; }
     }
-</style>
   </style>
 </head>
 <body>
+  <!-- ====================
+       FORMULÁRIO OCULTO PARA GOOGLE SHEETS
+       ==================== -->
   <iframe name="form-oculto" id="form-oculto" style="display:none;"></iframe>
+
+  <!-- ====================
+       POPUP INICIAL COM VÍDEO
+       ==================== -->
+  <div id="popup-video">
+    <video id="video-inicial" width="500" controls autoplay loop>
+      <!-- 🔹 Troque "video.mp4" pelo seu arquivo -->
+      <source src="Celebracao.mp4" type="video/mp4">
+      Seu navegador não suporta vídeo.
+    </video>
+    <button onclick="fecharPopup()">Fechar Vídeo e Continuar</button>
+  </div>
+
+  <!-- ====================
+       LOGO E FORMULÁRIO
+       ==================== -->
   <img id="logo" src="logo box.png" alt="Box Motors Logo">
-  
+
   <div id="form-container">
     <input type="text" id="nome" placeholder="Digite seu nome">
     <input type="text" id="whatsapp" placeholder="WhatsApp com DDD">
@@ -60,6 +107,9 @@
     <button id="validar-btn" onclick="validarCPF()">Validar CPF</button>
   </div>
 
+  <!-- ====================
+       ROLETA
+       ==================== -->
   <div id="roleta-container">
     <div id="seta-indicadora">◀</div>
     <canvas id="wheel" width="300" height="300"></canvas>
@@ -70,98 +120,149 @@
   <a id="redirect" href="https://linktr.ee/BoxMotors" target="_blank">Clique aqui para acessar nosso link</a>
 
   <script>
-    const premios = ["Troca de Oleo", "Revisão freios", "Brinde surpresa", "Lavagem grátis", "Troca de vela", "10% OFF"];
-    let cpfsUsados = new Set( );
+    /* ====================
+       LISTA DE PRÊMIOS E PROBABILIDADES
+       ==================== */
+    const premios = ["Troca de Oleo","Limpeza de freios","Brinde surpresa","Kit Transmissão","Revisão","10% OFF"];
+    const probabilidades = [5,10,30,1,1,20]; // mais alto = maior chance
+
+    // CPFs usados persistentes
+    let cpfsUsados = new Set(JSON.parse(localStorage.getItem("cpfsUsados") || "[]"));
+
     let angleCurrent = 0;
     let jogadorNome = '', jogadorWhatsapp = '', jogadorCpf = '';
 
-    function desenharRoleta() {
-      const canvas = document.getElementById("wheel"), ctx = canvas.getContext("2d"), total = premios.length, angle = 2 * Math.PI / total, colors = ["#ff0000", "#000000"];
-      for (let i = 0; i < total; i++) {
+    /* ====================
+       DESENHAR ROLETA
+       ==================== */
+    function desenharRoleta(){
+      const canvas = document.getElementById("wheel");
+      const ctx = canvas.getContext("2d");
+      const total = premios.length;
+      const angle = 2*Math.PI/total;
+      const colors = ["#950606","#000000"];
+      for(let i=0;i<total;i++){
         ctx.beginPath();
-        ctx.moveTo(150, 150);
-        ctx.arc(150, 150, 150, i * angle, (i + 1) * angle);
-        ctx.fillStyle = colors[i % 2];
+        ctx.moveTo(150,150);
+        ctx.arc(150,150,150,i*angle,(i+1)*angle);
+        ctx.fillStyle = colors[i%2];
         ctx.fill();
         ctx.save();
-        ctx.translate(150, 150);
-        ctx.rotate(i * angle + angle / 2);
-        ctx.textAlign = "right";
-        ctx.fillStyle = "white";
-        ctx.font = "bold 14px arial";
-        ctx.fillText(premios[i], 130, 8);
+        ctx.translate(150,150);
+        ctx.rotate(i*angle + angle/2);
+        ctx.textAlign="right";
+        ctx.fillStyle="white";
+        ctx.font="bold 14px arial";
+        ctx.fillText(premios[i],130,8);
         ctx.restore();
       }
     }
     desenharRoleta();
 
-    function validarCPF() {
+    /* ====================
+       ESCOLHER PRÊMIO PONDERADO
+       ==================== */
+    function escolherPremio(){
+      const total = probabilidades.reduce((a,b)=>a+b,0);
+      let rand = Math.random()*total;
+      for(let i=0;i<premios.length;i++){
+        if(rand<probabilidades[i]) return i;
+        rand -= probabilidades[i];
+      }
+    }
+
+    /* ====================
+       VALIDAR CPF
+       ==================== */
+    function validarCPF(){
       const cpf = document.getElementById("cpf").value.trim();
       const nome = document.getElementById("nome").value.trim();
       const whatsapp = document.getElementById("whatsapp").value.trim();
-
-      if (cpf.length !== 11 || nome === "" || whatsapp === "") {
+      if(cpf.length!==11 || nome==="" || whatsapp===""){
         alert("Preencha todos os dados corretamente.");
         return;
       }
-      if (cpfsUsados.has(cpf)) {
-        alert("Este CPF já foi utilizado. Tente outro.");
+      if(cpfsUsados.has(cpf)){
+        alert("Este CPF já foi utilizado nesta promoção.");
         return;
       }
-
-      // Libera o botão de girar e desabilita o botão de validar
-      document.getElementById("spin").disabled = false;
-      document.getElementById("validar-btn").disabled = true;
+      document.getElementById("spin").disabled=false;
+      document.getElementById("validar-btn").disabled=true;
       alert("CPF validado! Você já pode girar a roleta.");
     }
 
-    function girarRoleta() {
-      // Captura os dados antes de esconder o formulário
+    /* ====================
+       SALVAR CPF LOCALSTORAGE
+       ==================== */
+    function salvarCPF(cpf){
+      cpfsUsados.add(cpf);
+      localStorage.setItem("cpfsUsados", JSON.stringify([...cpfsUsados]));
+    }
+
+    /* ====================
+       FECHAR POPUP INICIAL
+       ==================== */
+    function fecharPopup(){
+      const popup = document.getElementById("popup-video");
+      popup.style.display="none";
+
+      // Opcional: iniciar som do vídeo
+      const video = document.getElementById("video-inicial");
+      video.muted = false;
+      video.play();
+    }
+
+    /* ====================
+       GIRAR ROLETA
+       ==================== */
+    function girarRoleta(){
       jogadorNome = document.getElementById("nome").value.trim();
       jogadorWhatsapp = document.getElementById("whatsapp").value.trim();
       jogadorCpf = document.getElementById("cpf").value.trim();
 
-      // Verifica se o CPF já foi usado nesta sessão
-      if (cpfsUsados.has(jogadorCpf)) {
-        alert("Este CPF já girou a roleta nesta sessão.");
+      if(cpfsUsados.has(jogadorCpf)){
+        alert("Este CPF já girou a roleta.");
         return;
       }
-      cpfsUsados.add(jogadorCpf); // Adiciona o CPF à lista de usados
 
-      // Esconde o formulário e desabilita os botões
-      document.getElementById('form-container').style.display = 'none';
-      document.getElementById("spin").disabled = true;
-      
-      const total = premios.length, rand = Math.floor(Math.random() * total), anglePerPrize = 360 / total, extraRotations = 6;
-      const prizeMiddleAngle = (rand * anglePerPrize) + (anglePerPrize / 2);
-      const angleTo = (360 * extraRotations) - prizeMiddleAngle;
+      salvarCPF(jogadorCpf);
+
+      document.getElementById('form-container').style.display='none';
+      document.getElementById("spin").disabled=true;
+
+      const rand = escolherPremio();
+      const total = premios.length;
+      const anglePerPrize = 360/total;
+      const extraRotations = 6;
+      const prizeMiddleAngle = (rand*anglePerPrize)+(anglePerPrize/2);
+      const angleTo = (360*extraRotations)-prizeMiddleAngle;
 
       const canvas = document.getElementById("wheel");
-      canvas.style.transition = "transform 4s ease-out";
-      canvas.style.transform = `rotate(${angleTo + angleCurrent}deg)`;
+      canvas.style.transition="transform 4s ease-out";
+      canvas.style.transform = `rotate(${angleTo+angleCurrent}deg)`;
       angleCurrent += angleTo;
 
-      setTimeout(() => {
+      setTimeout(()=>{
         const premio = premios[rand];
-        document.getElementById("result").innerHTML = `🎉 Parabéns <strong>${jogadorNome}</strong>! Você ganhou: <strong>${premio}</strong>  
-🥳 Tire um print da tela e marque <strong>@box_motors</strong> no Instagram!`;
-        
+        document.getElementById("result").innerHTML = `🎉 Parabéns <strong>${jogadorNome}</strong>! Você ganhou: <strong>${premio}</strong> 🥳 Para Validar Tire um print da tela e marque <strong>@box_motors</strong> no Instagram!`;
+
+        // ✅ Envia dados para Google Sheets
         const form = document.createElement('form');
         form.method = 'GET';
-        // Use a URL do seu script que já estava funcionando para salvar os dados
         form.action = 'https://script.google.com/macros/s/AKfycbwo9cVXq7a0pZtoBiR-I8Tn5VgbMv-aATilPKOXedXVRoxeRCFi59ObSWGPc5sHHZse/exec';
         form.target = 'form-oculto';
-        
-        const dados = { nome: jogadorNome, whatsapp: jogadorWhatsapp, cpf: jogadorCpf, premio: premio };
-        for (const key in dados ) {
+        const dados = {nome:jogadorNome, whatsapp:jogadorWhatsapp, cpf:jogadorCpf, premio:premio};
+        for(const key in dados){
           const input = document.createElement('input');
-          input.type = 'hidden'; input.name = key; input.value = dados[key];
+          input.type='hidden';
+          input.name=key;
+          input.value=dados[key];
           form.appendChild(input);
         }
         document.body.appendChild(form);
         form.submit();
         document.body.removeChild(form);
-      }, 4500);
+      },4500);
     }
   </script>
 </body>
