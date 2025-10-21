@@ -1,8 +1,10 @@
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Box Motors - Roleta de Prêmios</title>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <style>
     /* --------------------
        ESTILOS PRINCIPAIS
@@ -21,7 +23,12 @@
       border: none; border-radius: 5px;
       font-size: 16px;
     }
-    input { width: 220px; }
+    input { 
+      width: 220px; 
+      box-sizing: border-box;
+      width: 100%; 
+      max-width: 220px; 
+    }
     button { background-color: white; color: black; cursor: pointer; }
     button:disabled { cursor: not-allowed; opacity: 0.6; }
     #roleta-container { position: relative; width: 300px; height: 300px; margin: 20px auto; transition: all 0.3s; }
@@ -29,6 +36,7 @@
     canvas { border-radius: 50%; width: 100%; height: 100%; }
     #spin { background-color: red; color: white; font-weight: bold; font-size: 18px; margin: 20px auto; display: block; }
     #result { margin-top: 20px; font-size: 20px; color: rgb(10,84,0); }
+    #result button { margin: 10px; background: green; color: white; }
     #redirect { margin-top: 30px; display: block; color: rgb(113,16,106); font-weight: bold; text-decoration: underline; }
 
     /* --------------------
@@ -87,7 +95,7 @@
        POPUP INICIAL COM VÍDEO
        ==================== -->
   <div id="popup-video">
-    <video id="video-inicial" width="500" controls autoplay loop>
+    <video id="video-inicial" width="500" controls autoplay loop preload="none" loading="lazy">
       <!-- 🔹 Troque "video.mp4" pelo seu arquivo -->
       <source src="Celebracao.mp4" type="video/mp4">
       Seu navegador não suporta vídeo.
@@ -101,10 +109,10 @@
   <img id="logo" src="logo box.png" alt="Box Motors Logo">
 
   <div id="form-container">
-    <input type="text" id="nome" placeholder="Digite seu nome">
-    <input type="text" id="whatsapp" placeholder="WhatsApp com DDD">
-    <input type="text" id="cpf" placeholder="CPF (sem pontos ou traços)" maxlength="11">
-    <button id="validar-btn" onclick="validarCPF()">Validar CPF</button>
+    <input type="text" id="nome" placeholder="Digite seu nome" aria-label="Nome completo" required>
+    <input type="text" id="whatsapp" placeholder="WhatsApp com DDD" aria-label="Número de WhatsApp" required>
+    <input type="text" id="cpf" placeholder="CPF (sem pontos ou traços)" maxlength="11" aria-label="CPF" required>
+    <button id="validar-btn" onclick="validarCPF()" role="button" aria-label="Validar CPF">Validar CPF</button>
   </div>
 
   <!-- ====================
@@ -115,7 +123,7 @@
     <canvas id="wheel" width="300" height="300"></canvas>
   </div>
 
-  <button id="spin" onclick="girarRoleta()" disabled>🎁 GIRAR A ROLETA 🎁</button>
+  <button id="spin" onclick="girarRoleta()" disabled role="button" aria-label="Girar roleta">🎁 GIRAR A ROLETA 🎁</button>
   <div id="result"></div>
   <a id="redirect" href="https://linktr.ee/BoxMotors" target="_blank">Clique aqui para acessar nosso link</a>
 
@@ -124,13 +132,35 @@
        LISTA DE PRÊMIOS E PROBABILIDADES
        ==================== */
     const premios = ["Troca de Oleo","Limpeza de freios","Brinde surpresa","Kit Transmissão","Revisão","10% OFF"];
-    const probabilidades = [5,10,30,1,1,20]; // mais alto = maior chance
+    const probabilidades = [5,10,30,1,0,20]; // mais alto = maior chance
 
     // CPFs usados persistentes
     let cpfsUsados = new Set(JSON.parse(localStorage.getItem("cpfsUsados") || "[]"));
 
     let angleCurrent = 0;
     let jogadorNome = '', jogadorWhatsapp = '', jogadorCpf = '';
+
+    /* ====================
+       FUNÇÃO DE VALIDAÇÃO REAL DE CPF
+       ==================== */
+    function validarCPFBrasileiro(cpf) {
+        cpf = cpf.replace(/[^\d]+/g, ''); // Remove não-dígitos
+        if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false; // Sequencial (111.111.111-11) inválido
+
+        let soma = 0, resto;
+        for (let i = 1; i <= 9; i++) soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+        resto = (soma * 10) % 11;
+        if (resto === 10 || resto === 11) resto = 0;
+        if (resto !== parseInt(cpf.substring(9, 10))) return false;
+
+        soma = 0;
+        for (let i = 1; i <= 10; i++) soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+        resto = (soma * 10) % 11;
+        if (resto === 10 || resto === 11) resto = 0;
+        if (resto !== parseInt(cpf.substring(10, 11))) return false;
+
+        return true;
+    }
 
     /* ====================
        DESENHAR ROLETA
@@ -172,7 +202,7 @@
     }
 
     /* ====================
-       VALIDAR CPF
+       VALIDAR CPF COM MELHORIAS
        ==================== */
     function validarCPF(){
       const cpf = document.getElementById("cpf").value.trim();
@@ -182,8 +212,18 @@
         alert("Preencha todos os dados corretamente.");
         return;
       }
+      if (!validarCPFBrasileiro(cpf)) {
+        alert("CPF inválido! Verifique os dígitos.");
+        return;
+      }
       if(cpfsUsados.has(cpf)){
         alert("Este CPF já foi utilizado nesta promoção.");
+        return;
+      }
+      const dataAtual = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const cpfsHoje = JSON.parse(localStorage.getItem(`cpfs_${dataAtual}`) || "[]");
+      if (cpfsHoje.includes(cpf)) {
+        alert("Este CPF já foi usado hoje!");
         return;
       }
       document.getElementById("spin").disabled=false;
@@ -192,11 +232,20 @@
     }
 
     /* ====================
-       SALVAR CPF LOCALSTORAGE
+       SALVAR CPF COM LIMITE DIÁRIO
        ==================== */
     function salvarCPF(cpf){
+      const dataAtual = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const cpfsHoje = JSON.parse(localStorage.getItem(`cpfs_${dataAtual}`) || "[]");
+      if (cpfsHoje.includes(cpf)) {
+        return false;
+      }
+      cpfsHoje.push(cpf);
+      localStorage.setItem(`cpfs_${dataAtual}`, JSON.stringify(cpfsHoje));
+
       cpfsUsados.add(cpf);
       localStorage.setItem("cpfsUsados", JSON.stringify([...cpfsUsados]));
+      return true;
     }
 
     /* ====================
@@ -213,19 +262,17 @@
     }
 
     /* ====================
-       GIRAR ROLETA
+       GIRAR ROLETA COM MELHORIAS
        ==================== */
     function girarRoleta(){
       jogadorNome = document.getElementById("nome").value.trim();
       jogadorWhatsapp = document.getElementById("whatsapp").value.trim();
       jogadorCpf = document.getElementById("cpf").value.trim();
 
-      if(cpfsUsados.has(jogadorCpf)){
-        alert("Este CPF já girou a roleta.");
+      if (!salvarCPF(jogadorCpf)) {
+        alert("Este CPF já girou a roleta hoje.");
         return;
       }
-
-      salvarCPF(jogadorCpf);
 
       document.getElementById('form-container').style.display='none';
       document.getElementById("spin").disabled=true;
@@ -246,6 +293,32 @@
         const premio = premios[rand];
         document.getElementById("result").innerHTML = `🎉 Parabéns <strong>${jogadorNome}</strong>! Você ganhou: <strong>${premio}</strong> 🥳 Para Validar Tire um print da tela e marque <strong>@box_motors</strong> no Instagram!`;
 
+        // Confetti
+        confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
+        
+        // Som de vitória (se arquivo existir)
+        const audioWin = new Audio('win.mp3');
+        audioWin.play().catch(() => {}); // Ignora erros de autoplay
+
+        // Botão de compartilhar no WhatsApp
+        const btnShare = document.createElement('button');
+        btnShare.innerHTML = 'Dúvidas no WhatsApp';
+        btnShare.onclick = () => {
+            const msg = `Ganhei ${premio} na roleta da Box Motors! @box_motors`;
+            window.open(`https://wa.me/5569993144190?text=${encodeURIComponent(msg)}`);
+        };
+        document.getElementById("result").appendChild(btnShare);
+
+        // Loading para Sheets
+        const loading = document.createElement('p');
+        loading.innerHTML = 'Enviando para validação...';
+        loading.style.color = 'yellow';
+        document.getElementById("result").appendChild(loading);
+        
         // ✅ Envia dados para Google Sheets
         const form = document.createElement('form');
         form.method = 'GET';
@@ -262,8 +335,22 @@
         document.body.appendChild(form);
         form.submit();
         document.body.removeChild(form);
+
+        // Remove loading após envio
+        setTimeout(() => {
+          if (loading.parentNode) loading.remove();
+        }, 2000);
       },4500);
     }
+
+    /* ====================
+       EVENT LISTENER PARA ENTER NO CPF
+       ==================== */
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('cpf').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') validarCPF();
+        });
+    });
   </script>
 </body>
 </html>
